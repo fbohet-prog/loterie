@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chasse aux Stands - Grande Loterie</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; font-size: 24px; }
+        .progress-container { margin: 20px 0; }
+        .progress-bar { background: #e0e0e0; border-radius: 20px; height: 20px; width: 100%; overflow: hidden; }
+        .progress-fill { background: #2ecc71; height: 100%; width: 0%; transition: width 0.5s ease; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
+        .stand-box { padding: 15px 0; background: #e74c3c; color: white; font-weight: bold; border-radius: 8px; font-size: 14px; transition: 0.3s; }
+        .stand-box.visited { background: #2ecc71; }
+        .form-group { display: none; margin-top: 25px; text-align: left; }
+        .form-group input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .btn { background: #3498db; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; font-size: 16px; cursor: pointer; }
+        .btn:hover { background: #2980b9; }
+        .success-msg { color: #2ecc71; font-weight: bold; display: none; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎟️ Loterie de l'Événement</h1>
+    <p>Scannez le code QR de 10 stands différents pour participer au grand tirage au sort !</p>
+
+    <!-- Progression -->
+    <div class="progress-container">
+        <h3>Progression : <span id="count">0</span> / 10</h3>
+        <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+    </div>
+
+    <!-- Grille visuelle des stands -->
+    <div class="grid" id="stands-grid"></div>
+
+    <p id="status-message" style="font-weight: bold; color: #7f8c8d;"></p>
+
+    <!-- Formulaire final caché par défaut -->
+    <div id="lottery-form" class="form-group">
+        <h2>🎉 Félicitations !</h2>
+        <p>Vous avez validé vos 10 stands. Remplissez ce formulaire pour vous inscrire au tirage au sort.</p>
+        <form id="regForm">
+            <label for="username">Nom complet :</label>
+            <input type="text" id="username" required placeholder="Ex: Jean Dupont">
+            
+            <label for="useremail">Adresse e-mail :</label>
+            <input type="email" id="useremail" required placeholder="Ex: jean.dupont@email.com">
+            
+            <button type="submit" class="btn">M'inscrire au tirage au sort</button>
+        </form>
+    </div>
+    <div id="success-message" class="success-msg">Votre inscription a bien été enregistrée ! Bonne chance 🍀</div>
+</div>
+
+<script>
+    // Configuration : Liste des IDs des 10 stands
+    const totalStandsRequired = 10;
+    
+    // Récupérer l'historique des scans enregistrés dans le téléphone
+    let visitedStands = JSON.parse(localStorage.getItem('visitedStands')) || [];
+
+    // Détecter si l'URL contient un paramètre de stand (ex: ?stand=3)
+    const urlParams = new URLSearchParams(window.location.search);
+    const scannedStand = urlParams.get('stand');
+
+    const statusMessage = document.getElementById('status-message');
+
+    if (scannedStand) {
+        const standId = parseInt(scannedStand);
+        if (standId >= 1 && standId <= totalStandsRequired) {
+            if (!visitedStands.includes(standId)) {
+                visitedStands.push(standId);
+                localStorage.setItem('visitedStands', JSON.stringify(visitedStands));
+                statusMessage.innerHTML = `✅ Stand n°${standId} validé avec succès !`;
+                statusMessage.style.color = "#2ecc71";
+            } else {
+                statusMessage.innerHTML = `⚠️ Vous avez déjà validé le stand n°${standId}.`;
+                statusMessage.style.color = "#f39c12";
+            }
+        }
+    }
+
+    // Mettre à jour l'interface visuelle
+    document.getElementById('count').innerText = visitedStands.length;
+    const progressPercent = (visitedStands.length / totalStandsRequired) * 100;
+    document.getElementById('progress-fill').style.width = progressPercent + '%';
+
+    // Générer la grille des stands
+    const grid = document.getElementById('stands-grid');
+    for (let i = 1; i <= totalStandsRequired; i++) {
+        const box = document.createElement('div');
+        box.classList.add('stand-box');
+        box.innerText = i;
+        if (visitedStands.includes(i)) {
+            box.classList.add('visited');
+        }
+        grid.appendChild(box);
+    }
+
+    // Vérifier si les 10 stands sont atteints
+    if (visitedStands.length >= totalStandsRequired) {
+        document.getElementById('lottery-form').style.display = 'block';
+    }
+
+    // Gestion de la soumission du formulaire
+    document.getElementById('regForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('username').value;
+        const email = document.getElementById('useremail').value;
+
+        // --- ENREGISTREMENT DES DONNÉES ---
+        // Option 1 : Pour un test rapide, on peut l'enregistrer localement
+        // Option 2 (Recommandée) : Envoyer les données vers une base de données ou un Google Sheet (via webhook)
+        console.log("Nouveau participant :", name, email);
+
+        document.getElementById('regForm').style.display = 'none';
+        document.getElementById('success-message').style.display = 'block';
+        
+        // Optionnel : Réinitialiser la progression après inscription
+        // localStorage.removeItem('visitedStands');
+    });
+</script>
+</body>
+</html>
