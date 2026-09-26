@@ -14,7 +14,8 @@ body {
 
 .logo {
     display: block;
-    width: 150px;
+    max-width: 180px;
+    width: 100%;
     height: auto;
     margin: 20px auto;
 }
@@ -22,6 +23,7 @@ body {
 h1 {
     text-align: center;
     color: #5c2d91;
+    margin-bottom: 30px;
 }
 
 h2 {
