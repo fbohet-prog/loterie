@@ -20,6 +20,14 @@ body {
     margin: 20px auto;
 }
 
+.login-logo {
+    display: block;
+    width: 100px;
+    max-width: 45vw;
+    height: auto;
+    margin: 10px auto 20px;
+}
+
 h1 {
     text-align: center;
     color: #5c2d91;
@@ -71,13 +79,6 @@ button {
     height: 100%;
     background: #5c2d91;
     transition: 0.5s;
-}
-.logo {
-    display: block;
-    width: 140px;
-    max-width: 100%;
-    height: auto;
-    margin: 15px auto 25px;
 }
 
 .progress-section {
