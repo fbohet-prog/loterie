@@ -52,7 +52,11 @@ registerForm.addEventListener("submit", async function (event) {
 
         message.style.color = "green";
 
-        registerForm.reset();
+       registerForm.reset();
+
+setTimeout(() => {
+    window.location.href = "dashboard.html";
+}, 1500);
 
     } catch (error) {
         console.error("Erreur d'inscription :", error);
