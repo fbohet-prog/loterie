@@ -1,158 +1,99 @@
-import { auth, db }
-from "./firebase.js";
+<!DOCTYPE html>
+<html lang="fr">
 
-import {
-    onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+<head>
+    <meta charset="UTF-8">
 
-import {
-    collection,
-    getDocs,
-    addDoc,
-    serverTimestamp
-}
-from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-const participantCount =
-    document.getElementById(
-        "participantCount"
-    );
+    <title>Administration - Loterie Salon des DG</title>
 
-const eligibleCount =
-    document.getElementById(
-        "eligibleCount"
-    );
+    <link rel="stylesheet" href="style.css">
+</head>
 
-const drawButton =
-    document.getElementById(
-        "drawButton"
-    );
+<body>
 
-const winner =
-    document.getElementById(
-        "winner"
-    );
+<main class="welcome admin-page">
 
-let eligibleParticipants = [];
+    logo-proximus.png
 
-onAuthStateChanged(
-    auth,
-    async (user) => {
+    <h1>Administration de la loterie</h1>
 
-        if (!user) {
+    <section class="admin-stats">
 
-            window.location.href =
-                "login.html";
+        <div class="stat-box">
+            <strong id="participantCount">0</strong>
+            <span>Participants inscrits</span>
+        </div>
 
-            return;
-        }
+        <div class="stat-box">
+            <strong id="eligibleCount">0</strong>
+            <span>Participants qualifiés</span>
+        </div>
 
-        await loadParticipants();
-    }
-);
+        <div class="stat-box">
+            <strong id="availableCount">0</strong>
+            <span>Participants encore disponibles</span>
+        </div>
 
-async function loadParticipants() {
+    </section>
 
-    const snapshot =
-        await getDocs(
-            collection(
-                db,
-                "users"
-            )
-        );
+    <p id="adminMessage" aria-live="polite">
+        Chargement des participants...
+    </p>
 
-    participantCount.textContent =
-        snapshot.size;
+    <button
+        id="drawButton"
+        type="button"
+        disabled
+    >
+        Tirer les 3 gagnants
+    </button>
 
-    eligibleParticipants = [];
+    <section
+        id="resultsSection"
+        class="draw-results hidden"
+    >
 
-    snapshot.forEach(doc => {
+        <h2>Résultats du tirage</h2>
 
-        const data =
-            doc.data();
+        <article class="prize-card first-prize">
+            <div class="medal">🥇</div>
 
-        if (data.eligible === true) {
+            <h3>1er prix</h3>
 
-            eligibleParticipants.push({
-                id: doc.id,
-                ...data
-            });
-        }
-    });
+            <p id="firstWinner">
+                En attente du tirage
+            </p>
+        </article>
 
-    eligibleCount.textContent =
-        eligibleParticipants.length;
-}
+        <article class="prize-card second-prize">
+            <div class="medal">🥈</div>
 
-drawButton.addEventListener(
-    "click",
-    async () => {
+            <h3>2e prix</h3>
 
-        if (
-            eligibleParticipants.length === 0
-        ) {
+            <p id="secondWinner">
+                En attente du tirage
+            </p>
+        </article>
 
-            alert(
-                "Aucun participant qualifié."
-            );
+        <article class="prize-card third-prize">
+            <div class="medal">🥉</div>
 
-            return;
-        }
+            <h3>3e prix</h3>
 
-        const randomIndex =
-            Math.floor(
-                Math.random() *
-                eligibleParticipants.length
-            );
+            <p id="thirdWinner">
+                En attente du tirage
+            </p>
+        </article>
 
-        const selected =
-            eligibleParticipants[
-                randomIndex
-            ];
+    </section>
 
-        winner.innerHTML =
-            `
-            🎉 Gagnant
+    <section class="admin-actions">
 
-            <br><br>
-
-            ${selected.prenom}
-            ${selected.nom}
-
-            <br>
-
-            ${selected.societe}
-
-            <br>
-
-            ${selected.email}
-            `;
-
-        await addDoc(
-            collection(
-                db,
-                "draws"
-            ),
-            {
-                participantId:
-                    selected.id,
-
-                prenom:
-                    selected.prenom,
-
-                nom:
-                    selected.nom,
-
-                societe:
-                    selected.societe,
-
-                email:
-                    selected.email,
-
-                drawDate:
-                    serverTimestamp()
-            }
-        );
-    }
-);
+        <button
+            id="reloadButton"
+      
