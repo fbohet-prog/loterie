@@ -257,6 +257,14 @@ newCount.textContent =
     Math.min(result.count, 10);
 
 restartButton.classList.remove("hidden");
+        document.getElementById("scanTitle").textContent = "✅ Stand validé";
+standName.textContent = result.name;
+newCount.textContent = Math.min(result.count, 10);
+
+restartButton.classList.remove("hidden");
+scanResult.classList.remove("hidden"); // <-- AJOUTER CETTE LIGNE POUR AFFICHER LE RÉSULTAT
+
+if (result.eligible) {
         if (result.eligible) {
             showSuccess(
                 "Félicitations ! Votre participation au tirage est validée."
