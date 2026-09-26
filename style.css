@@ -136,3 +136,108 @@ button {
 .btn:hover {
     background-color: #472170;
 }
+
+.admin-page {
+    max-width: 900px;
+}
+
+.admin-stats {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 15px;
+    margin: 30px auto;
+}
+
+.stat-box {
+    padding: 20px 12px;
+    background-color: #f3eef8;
+    border: 1px solid #ddd1e8;
+    border-radius: 12px;
+}
+
+.stat-box strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #5c2d91;
+    font-size: 32px;
+}
+
+.stat-box span {
+    color: #444444;
+    font-size: 14px;
+}
+
+.draw-results {
+    max-width: 650px;
+    margin: 30px auto;
+}
+
+.prize-card {
+    margin: 18px 0;
+    padding: 22px;
+    background-color: white;
+    border: 2px solid #dddddd;
+    border-radius: 14px;
+    box-shadow:
+        0 8px 20px
+        rgba(0, 0, 0, 0.08);
+}
+
+.first-prize {
+    border-color: #d4af37;
+    background-color: #fffbea;
+}
+
+.second-prize {
+    border-color: #a7a7a7;
+    background-color: #f6f6f6;
+}
+
+.third-prize {
+    border-color: #b87333;
+    background-color: #fff5ec;
+}
+
+.medal {
+    font-size: 42px;
+}
+
+.prize-card h3 {
+    margin: 8px 0;
+    color: #5c2d91;
+    font-size: 24px;
+}
+
+.prize-card p {
+    font-size: 20px;
+    line-height: 1.5;
+}
+
+.prize-card small {
+    color: #666666;
+    font-size: 14px;
+}
+
+.admin-actions {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media screen and (max-width: 650px) {
+    .admin-stats {
+        grid-template-columns: 1fr;
+    }
+}
