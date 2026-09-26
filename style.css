@@ -72,3 +72,67 @@ button {
     background: #5c2d91;
     transition: 0.5s;
 }
+.logo {
+    display: block;
+    width: 140px;
+    max-width: 100%;
+    height: auto;
+    margin: 15px auto 25px;
+}
+
+.progress-section {
+    width: 100%;
+    max-width: 500px;
+    margin: 30px auto;
+}
+
+.progress-bar {
+    width: 100%;
+    max-width: 320px;
+    height: 20px;
+    margin: 20px auto;
+    overflow: hidden;
+    background-color: #dddddd;
+    border-radius: 20px;
+}
+
+#progress {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        #5c2d91,
+        #00a9ce
+    );
+    border-radius: 20px;
+    transition: width 0.5s ease;
+}
+
+#status {
+    min-height: 24px;
+    margin: 20px 0;
+    color: #5c2d91;
+    font-weight: bold;
+}
+
+.dashboard-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 30px;
+    color: white;
+    font-size: 18px;
+    text-decoration: none;
+    background-color: #5c2d91;
+    border-radius: 8px;
+}
+
+.btn:hover {
+    background-color: #472170;
+}
