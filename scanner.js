@@ -22,6 +22,13 @@ const standName =
 
 const newCount =
     document.getElementById("newCount");
+document.getElementById("scanTitle")
+    .textContent =
+    "En attente de scan";
+
+document.getElementById("newCount")
+    .textContent =
+    "0";
 
 const restartButton =
     document.getElementById("restartButton");
@@ -239,15 +246,17 @@ async function validateScan(decodedText) {
 
         await stopScanner();
 
-        standName.textContent =
-            result.name;
+        document.getElementById("scanTitle")
+    .textContent =
+    "✅ Stand validé";
 
-        newCount.textContent =
-            Math.min(result.count, 10);
+standName.textContent =
+    result.name;
 
-        scanResult.classList.remove("hidden");
-        restartButton.classList.remove("hidden");
+newCount.textContent =
+    Math.min(result.count, 10);
 
+restartButton.classList.remove("hidden");
         if (result.eligible) {
             showSuccess(
                 "Félicitations ! Votre participation au tirage est validée."
