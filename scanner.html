@@ -40,20 +40,22 @@
             Autorisez l'accès à la caméra pour commencer.
         </p>
 
-        <div
-            id="scanResult"
-            class="scan-result hidden">
+       <div
+    id="scanResult"
+    class="scan-result">
 
-            <h2>Stand validé</h2>
+    <h2 id="scanTitle">
+        En attente de scan
+    </h2>
 
-            <p id="standName"></p>
+    <p id="standName"></p>
 
-            <p>
-                Progression :
-                <strong id="newCount">0</strong> / 10
-            </p>
+    <p>
+        Progression :
+        <strong id="newCount">0</strong> / 10
+    </p>
 
-        </div>
+</div>
 
         <div class="scanner-actions">
 
@@ -78,7 +80,8 @@
 
     </main>
 
-    scanner.jsscript>
+   <script src="scanner.js"></script>
+
 
 </body>
 </html>
