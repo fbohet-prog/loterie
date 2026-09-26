@@ -1,21 +1,22 @@
 body {
     font-family: Arial, sans-serif;
-    text-align: center;
+    background: white;
     margin: 0;
-    padding: 20px;
-    background-color: white;
+    text-align: center;
 }
 
 .welcome {
-    max-width: 900px;
-    margin: 0 auto;
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
 }
 
 .logo {
-    width: 100%;
-    max-width: 500px;
-    height: auto;
     display: block;
+    width: 100%;
+    max-width: 450px;
+    height: auto;
     margin: 20px auto;
 }
 
@@ -27,22 +28,21 @@ h2 {
     color: #5c2d91;
 }
 
-button {
-    background-color: #5c2d91;
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
+p {
+    font-size: 18px;
 }
 
-button:hover {
-    background-color: #4a2375;
+button {
+    background: #5c2d91;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 30px;
+    font-size: 18px;
+    cursor: pointer;
 }
 
 .powered {
-    margin-top: 20px;
+    margin-top: 25px;
     color: #666;
-    font-size: 18px;
 }
