@@ -1,99 +1,145 @@
-<!DOCTYPE html>
-<html lang="fr">
+import { auth, db } from "./firebase.js";
+import { collection, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 
-<head>
-    <meta charset="UTF-8">
+let participants = [];
+let currentUser = null;
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+// Vérifier l'authentification
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentUser = user;
+        document.getElementById('loginButton').style.display = 'none';
+        document.getElementById('logoutButton').style.display = 'block';
+        loadParticipants();
+    } else {
+        document.getElementById('loginButton').style.display = 'block';
+        document.getElementById('logoutButton').style.display = 'none';
+        document.getElementById('adminMessage').textContent = 'Vous devez être connecté pour accéder à cette page.';
+    }
+});
 
-    <title>Administration - Loterie Salon des DG</title>
+// Charger les participants depuis Firestore
+async function loadParticipants() {
+    try {
+        document.getElementById('adminMessage').textContent = 'Chargement des participants...';
+        
+        const q = query(collection(db, "participants"));
+        const querySnapshot = await getDocs(q);
+        
+        participants = [];
+        querySnapshot.forEach((doc) => {
+            participants.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        updateStats();
+        document.getElementById('adminMessage').textContent = `${participants.length} participant(s) chargé(s)`;
+        
+    } catch (error) {
+        console.error("Erreur lors du chargement:", error);
+        document.getElementById('adminMessage').textContent = `Erreur: ${error.message}`;
+    }
+}
 
-    <link rel="stylesheet" href="style.css">
-</head>
+// Mettre à jour les statistiques
+function updateStats() {
+    const participantCount = participants.length;
+    
+    const eligibleCount = participants.filter(p => 
+        p.eligible === true || p.qualified === true
+    ).length;
+    
+    const availableCount = participants.filter(p => 
+        (p.eligible === true || p.qualified === true) && p.selected !== true
+    ).length;
+    
+    document.getElementById('participantCount').textContent = participantCount;
+    document.getElementById('eligibleCount').textContent = eligibleCount;
+    document.getElementById('availableCount').textContent = availableCount;
+    
+    // Activer le bouton de tirage si au moins 3 participants sont disponibles
+    document.getElementById('drawButton').disabled = availableCount < 3;
+}
 
-<body>
+// Tirer les 3 gagnants
+document.getElementById('drawButton').addEventListener('click', async function() {
+    const availableParticipants = participants.filter(p => 
+        (p.eligible === true || p.qualified === true) && p.selected !== true
+    );
+    
+    if (availableParticipants.length < 3) {
+        alert('Pas assez de participants disponibles pour le tirage.');
+        return;
+    }
+    
+    // Sélectionner 3 gagnants aléatoires
+    const winners = [];
+    const shuffled = [...availableParticipants].sort(() => 0.5 - Math.random());
+    
+    for (let i = 0; i < 3; i++) {
+        winners.push(shuffled[i]);
+    }
+    
+    try {
+        // Marquer les gagnants dans Firestore
+        for (const winner of winners) {
+            await updateDoc(doc(db, "participants", winner.id), {
+                selected: true
+            });
+        }
+        
+        // Afficher les résultats
+        displayResults(winners);
+        document.getElementById('drawButton').disabled = true;
+        
+    } catch (error) {
+        console.error("Erreur lors du tirage:", error);
+        alert(`Erreur: ${error.message}`);
+    }
+});
 
-<main class="welcome admin-page">
+// Afficher les résultats du tirage
+function displayResults(winners) {
+    const resultsSection = document.getElementById('resultsSection');
+    resultsSection.classList.remove('hidden');
+    
+    // Premier prix
+    const firstName = winners[0]?.firstName || 'Inconnu';
+    const firstLastName = winners[0]?.lastName || '';
+    document.getElementById('firstWinner').textContent = `${firstName} ${firstLastName}`;
+    
+    // Deuxième prix
+    const secondName = winners[1]?.firstName || 'Inconnu';
+    const secondLastName = winners[1]?.lastName || '';
+    document.getElementById('secondWinner').textContent = `${secondName} ${secondLastName}`;
+    
+    // Troisième prix
+    const thirdName = winners[2]?.firstName || 'Inconnu';
+    const thirdLastName = winners[2]?.lastName || '';
+    document.getElementById('thirdWinner').textContent = `${thirdName} ${thirdLastName}`;
+    
+    document.getElementById('adminMessage').textContent = '✅ Tirage terminé !';
+}
 
-    logo-proximus.png
+// Bouton Recharger
+document.getElementById('reloadButton').addEventListener('click', function() {
+    location.reload();
+});
 
-    <h1>Administration de la loterie</h1>
+// Boutons de connexion/déconnexion
+document.getElementById('loginButton').addEventListener('click', function() {
+    window.location.href = 'login.html';
+});
 
-    <section class="admin-stats">
-
-        <div class="stat-box">
-            <strong id="participantCount">0</strong>
-            <span>Participants inscrits</span>
-        </div>
-
-        <div class="stat-box">
-            <strong id="eligibleCount">0</strong>
-            <span>Participants qualifiés</span>
-        </div>
-
-        <div class="stat-box">
-            <strong id="availableCount">0</strong>
-            <span>Participants encore disponibles</span>
-        </div>
-
-    </section>
-
-    <p id="adminMessage" aria-live="polite">
-        Chargement des participants...
-    </p>
-
-    <button
-        id="drawButton"
-        type="button"
-        disabled
-    >
-        Tirer les 3 gagnants
-    </button>
-
-    <section
-        id="resultsSection"
-        class="draw-results hidden"
-    >
-
-        <h2>Résultats du tirage</h2>
-
-        <article class="prize-card first-prize">
-            <div class="medal">🥇</div>
-
-            <h3>1er prix</h3>
-
-            <p id="firstWinner">
-                En attente du tirage
-            </p>
-        </article>
-
-        <article class="prize-card second-prize">
-            <div class="medal">🥈</div>
-
-            <h3>2e prix</h3>
-
-            <p id="secondWinner">
-                En attente du tirage
-            </p>
-        </article>
-
-        <article class="prize-card third-prize">
-            <div class="medal">🥉</div>
-
-            <h3>3e prix</h3>
-
-            <p id="thirdWinner">
-                En attente du tirage
-            </p>
-        </article>
-
-    </section>
-
-    <section class="admin-actions">
-
-        <button
-            id="reloadButton"
-      
+document.getElementById('logoutButton').addEventListener('click', function() {
+    auth.signOut().then(() => {
+        localStorage.removeItem('authToken');
+        sessionStorage.clear();
+        window.location.href = 'login.html';
+    }).catch((error) => {
+        console.error('Erreur de déconnexion:', error);
+    });
+});
