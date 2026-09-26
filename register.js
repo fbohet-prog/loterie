@@ -86,4 +86,4 @@ registerForm.addEventListener("submit", async function (event) {
         }
     }
 });
-}
+
