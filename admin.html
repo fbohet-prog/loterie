@@ -24,6 +24,23 @@
     class="logo"
 >
 
+    <div class="auth-header">
+        <button
+            id="loginButton"
+            class="auth-button"
+            type="button"
+        >
+            Se connecter
+        </button>
+        <button
+            id="logoutButton"
+            class="auth-button logout"
+            type="button"
+            style="display: none;"
+        >
+            Déconnexion
+        </button>
+    </div>
 
     <h1>Administration de la loterie</h1>
 
@@ -112,6 +129,20 @@
 
 <script src="firebase.js"></script>
 <script src="admin.js"></script>
+
+<script>
+    // Handle login/logout button
+    document.getElementById('loginButton').addEventListener('click', function() {
+        window.location.href = 'login.html';
+    });
+
+    document.getElementById('logoutButton').addEventListener('click', function() {
+        // Clear authentication and redirect
+        localStorage.removeItem('authToken');
+        sessionStorage.clear();
+        window.location.href = 'login.html';
+    });
+</script>
 
 </body>
 
