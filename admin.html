@@ -127,22 +127,8 @@
 
 </main>
 
-<script src="firebase.js"></script>
-<script src="admin.js"></script>
-
-<script>
-    // Handle login/logout button
-    document.getElementById('loginButton').addEventListener('click', function() {
-        window.location.href = 'login.html';
-    });
-
-    document.getElementById('logoutButton').addEventListener('click', function() {
-        // Clear authentication and redirect
-        localStorage.removeItem('authToken');
-        sessionStorage.clear();
-        window.location.href = 'login.html';
-    });
-</script>
+<script type="module" src="firebase.js"></script>
+<script type="module" src="admin.js"></script>
 
 </body>
 
