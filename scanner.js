@@ -22,16 +22,15 @@ const standName =
 
 const newCount =
     document.getElementById("newCount");
+
+const restartButton =
+    document.getElementById("restartButton");
+
 document.getElementById("scanTitle")
     .textContent =
     "En attente de scan";
 
-document.getElementById("newCount")
-    .textContent =
-    "0";
-
-const restartButton =
-    document.getElementById("restartButton");
+newCount.textContent = "0";
 
 let authenticatedUser = null;
 let scanner = null;
@@ -158,11 +157,6 @@ async function validateScan(decodedText) {
                 authenticatedUser.uid
             );
 
-        /*
-         * L'identifiant combine l'utilisateur et le stand.
-         * Le même stand ne peut donc pas créer deux documents
-         * pour un même participant.
-         */
         const scanId =
             `${authenticatedUser.uid}_${standId}`;
 
@@ -247,35 +241,26 @@ async function validateScan(decodedText) {
         await stopScanner();
 
         document.getElementById("scanTitle")
-    .textContent =
-    "✅ Stand validé";
+            .textContent = "✅ Stand validé";
 
-standName.textContent =
-    result.name;
+        standName.textContent = result.name;
+        newCount.textContent = Math.min(result.count, 10);
 
-newCount.textContent =
-    Math.min(result.count, 10);
+        restartButton.classList.remove("hidden");
+        scanResult.classList.remove("hidden");
 
-restartButton.classList.remove("hidden");
-        document.getElementById("scanTitle").textContent = "✅ Stand validé";
-standName.textContent = result.name;
-newCount.textContent = Math.min(result.count, 10);
+        if (result.eligible) {
+            showSuccess(
+                "Félicitations ! Votre participation au tirage est validée."
+            );
+        } else {
+            const remaining =
+                Math.max(0, 10 - result.count);
 
-restartButton.classList.remove("hidden");
-scanResult.classList.remove("hidden"); // <-- AJOUTER CETTE LIGNE POUR AFFICHER LE RÉSULTAT
-
-if (result.eligible) {
-    showSuccess(
-        "Félicitations ! Votre participation au tirage est validée."
-    );
-} else {
-    const remaining =
-        Math.max(0, 10 - result.count);
-
-    showSuccess(
-        `Stand validé. Encore ${remaining} stand(s) à visiter.`
-    );
-}
+            showSuccess(
+                `Stand validé. Encore ${remaining} stand(s) à visiter.`
+            );
+        }
 
     } catch (error) {
         console.error(
@@ -283,18 +268,15 @@ if (result.eligible) {
             error
         );
 
-        showError(error.message);
+        showError(error.message || "Une erreur est survenue.");
 
         scanLocked = false;
     }
 }
 
 function handleScanFailure(errorMessage) {
-    /*
-     * Cette fonction est appelée en continu lorsque
-     * aucun QR Code n'est détecté.
-     * Il ne faut donc pas afficher chaque message.
-     */
+    // This is intentionally left blank.
+    // We do not want to spam the user with repeated scanning errors.
 }
 
 function startScanner() {
@@ -346,9 +328,7 @@ onAuthStateChanged(
     auth,
     function (user) {
         if (!user) {
-            window.location.href =
-                "login.html";
-
+            window.location.href = "login.html";
             return;
         }
 
