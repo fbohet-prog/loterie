@@ -3,52 +3,56 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon parcours</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Mon parcours - Salon des DG</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="welcome">
+    <main class="welcome">
 
-<img src="logo-proximus.png" alt="Logo Proximus" style="max-width: 150px; margin-bottom: 20px;">
+        logo-proximus.png
 
-    <h1>Mon parcours</h1>
+        <h1>Mon parcours</h1>
 
-    <p id="welcome"></p>
+        <p id="welcome">
+            Chargement de votre profil...
+        </p>
 
-    <h2>Progression</h2>
+        <section class="progress-section">
 
-    <p>
-        Stands visités :
-        <strong id="count">0</strong> / 10
-    </p>
+            <h2>Progression</h2>
 
-    <div
-        style="
-            width:300px;
-            margin:auto;
-            background:#ddd;
-            border-radius:20px;
-        "
-    >
-        <div
-            id="progress"
-            style="
-                width:0%;
-                height:20px;
-                background:#5c2d91;
-                border-radius:20px;
-            "
-        ></div>
-    </div>
+            <p>
+                Stands visités :
+                <strong id="count">0</strong> / 10
+            </p>
 
-    <p id="status"></p>
+            <div
+                class="progress-bar"
+                role="progressbar"
+                aria-label="Progression des stands visités"
+                aria-valuemin="0"
+                aria-valuemax="10"
+                aria-valuenow="0"
+            >
+                <div id="progress"></div>
+            </div>
 
-</div>
+            <p id="status" aria-live="polite">
+                Chargement de votre progression...
+            </p>
 
-dashboard.jsscript>
+        </section>
 
-</body>
-</html>
+        <div class="dashboard-actions">
+
+            scanner.html
+                Scanner un QR code
