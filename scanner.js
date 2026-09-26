@@ -265,18 +265,17 @@ restartButton.classList.remove("hidden");
 scanResult.classList.remove("hidden"); // <-- AJOUTER CETTE LIGNE POUR AFFICHER LE RÉSULTAT
 
 if (result.eligible) {
-        if (result.eligible) {
-            showSuccess(
-                "Félicitations ! Votre participation au tirage est validée."
-            );
-        } else {
-            const remaining =
-                Math.max(0, 10 - result.count);
+    showSuccess(
+        "Félicitations ! Votre participation au tirage est validée."
+    );
+} else {
+    const remaining =
+        Math.max(0, 10 - result.count);
 
-            showSuccess(
-                `Stand validé. Encore ${remaining} stand(s) à visiter.`
-            );
-        }
+    showSuccess(
+        `Stand validé. Encore ${remaining} stand(s) à visiter.`
+    );
+}
 
     } catch (error) {
         console.error(
