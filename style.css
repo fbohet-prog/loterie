@@ -1,27 +1,48 @@
-.welcome {
+body {
+    font-family: Arial, sans-serif;
     text-align: center;
-    margin-top: 30px;
+    margin: 0;
+    padding: 20px;
+    background-color: white;
+}
+
+.welcome {
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .logo {
-    width: 250px;
-    max-width: 80%;
-    margin-bottom: 20px;
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    display: block;
+    margin: 20px auto;
 }
 
-.welcome h1 {
+h1 {
     color: #5c2d91;
-    font-size: 2.5rem;
-    margin-bottom: 10px;
 }
 
-.welcome h2 {
+h2 {
+    color: #5c2d91;
+}
+
+button {
+    background-color: #5c2d91;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #4a2375;
+}
+
+.powered {
+    margin-top: 20px;
     color: #666;
-    font-size: 1.5rem;
-}
-
-function tirage() {
-    const nombre = Math.floor(Math.random() * 100) + 1;
-    document.getElementById("resultat").innerHTML =
-        "Numéro gagnant : " + nombre;
+    font-size: 18px;
 }
