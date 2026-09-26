@@ -14,8 +14,7 @@ body {
 
 .logo {
     display: block;
-    width: 100%;
-    max-width: 450px;
+    width: 200px;
     height: auto;
     margin: 20px auto;
 }
@@ -33,6 +32,8 @@ p {
 }
 
 button {
+    display: block;
+    margin: 20px auto;
     background: #5c2d91;
     color: white;
     border: none;
@@ -41,6 +42,7 @@ button {
     font-size: 18px;
     cursor: pointer;
 }
+
 
 .powered {
     margin-top: 25px;
