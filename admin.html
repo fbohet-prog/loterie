@@ -3,54 +3,97 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
 
-    <title>Administration - Loterie Salon DG</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Administration - Loterie Salon des DG</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="welcome">
+<main class="welcome admin-page">
 
     logo-proximus.png
 
-    <h1>Administration</h1>
+    <h1>Administration de la loterie</h1>
 
-    <h2>Statistiques</h2>
+    <section class="admin-stats">
 
-    <p>
-        Participants :
-        <strong id="participantCount">
-            0
-        </strong>
+        <div class="stat-box">
+            <strong id="participantCount">0</strong>
+            <span>Participants inscrits</span>
+        </div>
+
+        <div class="stat-box">
+            <strong id="eligibleCount">0</strong>
+            <span>Participants qualifiés</span>
+        </div>
+
+        <div class="stat-box">
+            <strong id="availableCount">0</strong>
+            <span>Participants encore disponibles</span>
+        </div>
+
+    </section>
+
+    <p id="adminMessage" aria-live="polite">
+        Chargement des participants...
     </p>
 
-    <p>
-        Qualifiés :
-        <strong id="eligibleCount">
-            0
-        </strong>
-    </p>
-
-    <button id="drawButton">
-        🎁 Tirer un gagnant
+    <button
+        id="drawButton"
+        type="button"
+        disabled
+    >
+        Tirer les 3 gagnants
     </button>
 
-    <div id="winnerBox">
+    <section
+        id="resultsSection"
+        class="draw-results hidden"
+    >
 
-        <h2>Résultat</h2>
+        <h2>Résultats du tirage</h2>
 
-        <p id="winner"></p>
+        <article class="prize-card first-prize">
+            <div class="medal">🥇</div>
 
-    </div>
+            <h3>1er prix</h3>
 
-</div>
+            <p id="firstWinner">
+                En attente du tirage
+            </p>
+        </article>
 
-admin.jsscript>
+        <article class="prize-card second-prize">
+            <div class="medal">🥈</div>
 
-</body>
+            <h3>2e prix</h3>
 
-</html>
+            <p id="secondWinner">
+                En attente du tirage
+            </p>
+        </article>
+
+        <article class="prize-card third-prize">
+            <div class="medal">🥉</div>
+
+            <h3>3e prix</h3>
+
+            <p id="thirdWinner">
+                En attente du tirage
+            </p>
+        </article>
+
+    </section>
+
+    <section class="admin-actions">
+
+        <button
+            id="reloadButton"
+      
