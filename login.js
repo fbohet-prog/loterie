@@ -24,6 +24,9 @@ loginForm.addEventListener(
         password.value
       );
 
+window.location.href =
+    "dashboard.html";
+
       message.textContent =
         "✅ Connexion réussie";
 
