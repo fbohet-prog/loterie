@@ -3,35 +3,84 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner QR Code</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Scanner un stand - Salon des DG</title>
 
     <link rel="stylesheet" href="style.css">
+
+    https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js    </script>
 </head>
 
 <body>
 
-<div class="welcome">
+    <main class="welcome scanner-page">
 
-     <img src="logo-proximus.png"
+        <img src="logo-proximus.png"
          alt="Proximus"
         class="logo">
 
-    <h1>Scanner un QR Code</h1>
+        <h1>Scanner un stand</h1>
 
-    <p>
-        Cette étape servira à scanner les stands du Salon des DG.
-    </p>
+        <p>
+            Positionnez le QR Code du stand dans le cadre.
+        </p>
 
-    <p id="result">
-        Scanner en préparation...
-    </p>
+        <div id="reader"></div>
 
-    <a href="dashboard.html" class="btn">
-        Retour au parcours
-    </a>
+        <p
+            id="scannerMessage"
+            class="scanner-message"
+            aria-live="polite">
+            Autorisez l'accès à la caméra pour commencer.
+        </p>
 
-</div>
+        <div
+            id="scanResult"
+            class="scan-result hidden">
+
+            <h2>Stand validé</h2>
+
+            <p id="standName"></p>
+
+            <p>
+                Progression :
+                <strong id="newCount">0</strong> / 10
+            </p>
+
+        </div>
+
+        <div class="scanner-actions">
+
+            <button
+                id="restartButton"
+                type="button"
+                class="secondary-button hidden">
+                Scanner un autre stand
+            </button>
+
+            <a
+                href="dashboard.html"
+                class="btn">
+                Retour à mon parcours
+            </a>
+
+        </div>
+
+        <p class="powered">
+            Powered by Proximus
+        </p>
+
+    </main>
+
+    scanner.js    </script>
 
 </body>
+
 </html>
+
+   
