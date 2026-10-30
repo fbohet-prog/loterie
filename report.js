@@ -1,559 +1,266 @@
 import { auth, db } from "./firebase.js";
 
 import {
-    onAuthStateChanged
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 
 import {
-    collection,
-    getDocs
+  collection,
+  getDocs,
+  orderBy,
+  query
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
 const reportBody = document.getElementById("reportBody");
-const participantCountElement = document.getElementById("participantCount");
-const scanCountElement = document.getElementById("scanCount");
-const companyCountElement = document.getElementById("companyCount");
-const statusElement = document.getElementById("status");
+const status = document.getElementById("status");
 const errorBox = document.getElementById("errorBox");
-
+const participantCount = document.getElementById("participantCount");
+const scanCount = document.getElementById("scanCount");
+const companyCount = document.getElementById("companyCount");
 const searchInput = document.getElementById("searchInput");
 const scanFilter = document.getElementById("scanFilter");
 const sortSelect = document.getElementById("sortSelect");
 
-const printButton = document.getElementById("printBtn");
-const wordButton = document.getElementById("wordBtn");
-const csvButton = document.getElementById("csvBtn");
-const refreshButton = document.getElementById("refreshBtn");
+let reportRows = [];
 
-let participants = [];
+function firstValue(object, fields, fallback = "") {
+  for (const field of fields) {
+    const value = object?.[field];
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+  return fallback;
+}
 
 function escapeHtml(value) {
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+  })[character]);
 }
 
-function getParticipantName(participant) {
-    const firstName =
-        participant.prenom ||
-        participant.firstName ||
-        participant.firstname ||
-        "";
-
-    const lastName =
-        participant.nom ||
-        participant.lastName ||
-        participant.lastname ||
-        "";
-
-    const completeName = `${firstName} ${lastName}`.trim();
-
-    return completeName || participant.displayName || "Participant";
+function formatDate(value) {
+  if (!value) return "";
+  const date = typeof value.toDate === "function" ? value.toDate() : new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("fr-BE");
 }
 
-function getParticipantEmail(participant) {
-    return participant.email || participant.mail || "";
+function companyFromStand(standData, fallback = "") {
+  return firstValue(
+    standData,
+    ["companyName", "company", "societe", "société", "organisation", "name"],
+    fallback
+  );
 }
 
-function getParticipantCompany(participant) {
-    return (
-        participant.societe ||
-        participant.société ||
-        participant.company ||
-        participant.companyName ||
-        participant.organisation ||
-        participant.organization ||
-        ""
-    );
-}
+async function loadReport() {
+  status.textContent = "Chargement du rapport…";
+  errorBox.classList.add("hidden");
 
-function getRegistrationDate(participant) {
-    const date =
-        participant.createdAt ||
-        participant.registeredAt ||
-        participant.registrationDate ||
-        participant.dateInscription;
+  try {
+    const [usersSnapshot, scansSnapshot, standsSnapshot] = await Promise.all([
+      getDocs(collection(db, "users")),
+      getDocs(query(collection(db, "scans"), orderBy("scannedAt", "desc"))),
+      getDocs(collection(db, "stands"))
+    ]);
 
-    if (!date) {
-        return "";
-    }
-
-    try {
-        if (typeof date.toDate === "function") {
-            return date.toDate().toLocaleString("fr-BE");
-        }
-
-        const convertedDate = new Date(date);
-
-        if (!Number.isNaN(convertedDate.getTime())) {
-            return convertedDate.toLocaleString("fr-BE");
-        }
-    } catch (error) {
-        console.warn("Date non reconnue :", date);
-    }
-
-    return "";
-}
-
-function normalizeScan(scan) {
-    if (typeof scan === "string" || typeof scan === "number") {
-        return {
-            code: String(scan),
-            company: String(scan),
-            date: ""
-        };
-    }
-
-    if (!scan || typeof scan !== "object") {
-        return null;
-    }
-
-    const code =
-        scan.code ||
-        scan.qrCode ||
-        scan.qrId ||
-        scan.standId ||
-        scan.id ||
-        scan.value ||
-        "";
-
-    const company =
-        scan.societe ||
-        scan.société ||
-        scan.company ||
-        scan.companyName ||
-        scan.standName ||
-        scan.nom ||
-        scan.name ||
-        scan.exhibitor ||
-        code;
-
-    let scanDate = "";
-
-    const date =
-        scan.scannedAt ||
-        scan.date ||
-        scan.createdAt ||
-        scan.timestamp;
-
-    if (date) {
-        try {
-            if (typeof date.toDate === "function") {
-                scanDate = date.toDate().toLocaleString("fr-BE");
-            } else {
-                const convertedDate = new Date(date);
-
-                if (!Number.isNaN(convertedDate.getTime())) {
-                    scanDate = convertedDate.toLocaleString("fr-BE");
-                }
-            }
-        } catch (error) {
-            console.warn("Date de scan non reconnue :", date);
-        }
-    }
-
-    return {
-        code: String(code),
-        company: String(company),
-        date: scanDate
-    };
-}
-
-function getParticipantScans(participant) {
-    const possibleScanFields = [
-        participant.scans,
-        participant.qrScans,
-        participant.scannedCodes,
-        participant.scannedStands,
-        participant.visitedStands,
-        participant.codesScannes,
-        participant.stands
-    ];
-
-    const existingScanField = possibleScanFields.find(
-        (field) => field !== undefined && field !== null
-    );
-
-    if (!existingScanField) {
-        return [];
-    }
-
-    let scans = [];
-
-    if (Array.isArray(existingScanField)) {
-        scans = existingScanField;
-    } else if (typeof existingScanField === "object") {
-        scans = Object.entries(existingScanField)
-            .filter(([, value]) => value !== false && value !== null)
-            .map(([key, value]) => {
-                if (value === true) {
-                    return key;
-                }
-
-                if (typeof value === "object") {
-                    return {
-                        id: key,
-                        ...value
-                    };
-                }
-
-                return value;
-            });
-    }
-
-    return scans
-        .map(normalizeScan)
-        .filter(Boolean)
-        .filter((scan) => scan.code || scan.company);
-}
-
-function prepareParticipant(documentSnapshot) {
-    const data = documentSnapshot.data();
-
-    return {
-        id: documentSnapshot.id,
-        ...data,
-        reportName: getParticipantName(data),
-        reportEmail: getParticipantEmail(data),
-        reportCompany: getParticipantCompany(data),
-        reportRegistrationDate: getRegistrationDate(data),
-        reportScans: getParticipantScans(data)
-    };
-}
-
-async function loadParticipants() {
-    statusElement.textContent = "Chargement du rapport…";
-    errorBox.classList.add("hidden");
-
-    try {
-        const snapshot = await getDocs(collection(db, "users"));
-
-        participants = snapshot.docs
-            .map(prepareParticipant)
-            .filter((participant) => {
-                return (
-                    !participant.role ||
-                    participant.role === "participant"
-                );
-            });
-
-        renderReport();
-
-        statusElement.textContent =
-            `${participants.length} participant(s) chargé(s).`;
-    } catch (error) {
-        console.error(
-            "Erreur lors du chargement du rapport :",
-            error
-        );
-
-        statusElement.textContent = "";
-
-        errorBox.textContent =
-            `Impossible de charger les données Firebase : ${error.message}`;
-
-        errorBox.classList.remove("hidden");
-    }
-}
-
-function getFilteredParticipants() {
-    const searchValue = searchInput.value
-        .trim()
-        .toLowerCase();
-
-    const scanFilterValue = scanFilter.value;
-    const sortValue = sortSelect.value;
-
-    const filteredParticipants = participants.filter((participant) => {
-        const searchContent = [
-            participant.reportName,
-            participant.reportEmail,
-            participant.reportCompany,
-            ...participant.reportScans.map((scan) => scan.code),
-            ...participant.reportScans.map((scan) => scan.company)
-        ]
-            .join(" ")
-            .toLowerCase();
-
-        const matchesSearch =
-            !searchValue ||
-            searchContent.includes(searchValue);
-
-        const scanCount = participant.reportScans.length;
-
-        const matchesScanFilter =
-            scanFilterValue === "all" ||
-            (scanFilterValue === "with" && scanCount > 0) ||
-            (scanFilterValue === "without" && scanCount === 0);
-
-        return matchesSearch && matchesScanFilter;
+    const standsById = new Map();
+    standsSnapshot.forEach(documentSnapshot => {
+      const stand = documentSnapshot.data();
+      standsById.set(documentSnapshot.id, {
+        name: stand.name || documentSnapshot.id,
+        company: companyFromStand(stand, stand.name || documentSnapshot.id)
+      });
     });
 
-    filteredParticipants.sort((participantA, participantB) => {
-        if (sortValue === "scans") {
-            return (
-                participantB.reportScans.length -
-                participantA.reportScans.length
-            );
-        }
+    const scansByParticipant = new Map();
+    scansSnapshot.forEach(documentSnapshot => {
+      const scan = documentSnapshot.data();
+      if (!scan.participantId) return;
 
-        if (sortValue === "date") {
-            return participantB.reportRegistrationDate.localeCompare(
-                participantA.reportRegistrationDate
-            );
-        }
+      const stand = standsById.get(scan.standId) || {};
+      const normalizedScan = {
+        standId: scan.standId || "",
+        standName: scan.standName || stand.name || scan.standId || "Stand inconnu",
+        company: scan.standCompany || stand.company || scan.standName || scan.standId || "Société inconnue",
+        scannedAt: formatDate(scan.scannedAt),
+        scannedAtSort: scan.scannedAt?.toMillis?.() || 0
+      };
 
-        return participantA.reportName.localeCompare(
-            participantB.reportName,
-            "fr"
-        );
+      if (!scansByParticipant.has(scan.participantId)) {
+        scansByParticipant.set(scan.participantId, []);
+      }
+      scansByParticipant.get(scan.participantId).push(normalizedScan);
     });
 
-    return filteredParticipants;
+    reportRows = usersSnapshot.docs.map(documentSnapshot => {
+      const user = documentSnapshot.data();
+      const participantId = documentSnapshot.id;
+      const scans = scansByParticipant.get(participantId) || [];
+
+      return {
+        participantId,
+        name: firstValue(
+          user,
+          ["displayName", "fullName", "name", "nomComplet"],
+          `${firstValue(user, ["firstName", "prenom", "prénom"])} ${firstValue(user, ["lastName", "nom"])}`.trim() || "Sans nom"
+        ),
+        email: firstValue(user, ["email", "mail"]),
+        participantCompany: firstValue(user, ["companyName", "company", "societe", "société", "organisation"]),
+        registrationDate: formatDate(firstValue(user, ["createdAt", "registeredAt", "registrationDate", "dateInscription"])),
+        registrationSort: firstValue(user, ["createdAt", "registeredAt"])?.toMillis?.() || 0,
+        eligible: user.eligible === true,
+        scans,
+        scanCount: scans.length
+      };
+    });
+
+    // Conserve également un scan si son participant n'existe plus dans users.
+    for (const [participantId, scans] of scansByParticipant.entries()) {
+      if (!reportRows.some(row => row.participantId === participantId)) {
+        reportRows.push({
+          participantId,
+          name: "Participant introuvable",
+          email: "",
+          participantCompany: "",
+          registrationDate: "",
+          registrationSort: 0,
+          eligible: scans.length >= 10,
+          scans,
+          scanCount: scans.length
+        });
+      }
+    }
+
+    renderReport();
+    status.textContent = `Rapport généré le ${new Date().toLocaleString("fr-BE")}`;
+  } catch (error) {
+    console.error("Erreur lors du chargement du rapport :", error);
+    status.textContent = "";
+    errorBox.textContent = `Impossible de charger le rapport : ${error.message}`;
+    errorBox.classList.remove("hidden");
+  }
+}
+
+function getFilteredRows() {
+  const search = searchInput.value.trim().toLowerCase();
+  const filter = scanFilter.value;
+  const sort = sortSelect.value;
+
+  const rows = reportRows.filter(row => {
+    const searchableText = [
+      row.name,
+      row.email,
+      row.participantCompany,
+      ...row.scans.flatMap(scan => [scan.standId, scan.standName, scan.company])
+    ].join(" ").toLowerCase();
+
+    const matchesSearch = !search || searchableText.includes(search);
+    const matchesFilter = filter === "all" ||
+      (filter === "with" && row.scanCount > 0) ||
+      (filter === "without" && row.scanCount === 0) ||
+      (filter === "eligible" && row.eligible);
+
+    return matchesSearch && matchesFilter;
+  });
+
+  rows.sort((a, b) => {
+    if (sort === "scans") return b.scanCount - a.scanCount;
+    if (sort === "date") return b.registrationSort - a.registrationSort;
+    return a.name.localeCompare(b.name, "fr");
+  });
+
+  return rows;
 }
 
 function renderReport() {
-    const filteredParticipants = getFilteredParticipants();
+  const rows = getFilteredRows();
 
-    reportBody.innerHTML = filteredParticipants
-        .map((participant) => {
-            const qrCodes = participant.reportScans.length
-                ? participant.reportScans
-                    .map((scan) => {
-                        return `
-                            <span class="tag">
-                                ${escapeHtml(scan.code)}
-                            </span>
-                        `;
-                    })
-                    .join("")
-                : '<span class="muted">Aucun QR scanné</span>';
+  reportBody.innerHTML = rows.map(row => {
+    const scanDetails = row.scans.length
+      ? row.scans.map(scan => `
+          <div class="scan-detail">
+            <strong>${escapeHtml(scan.standName)}</strong>
+            <span>QR : ${escapeHtml(scan.standId)}</span>
+            <span>Société : ${escapeHtml(scan.company)}</span>
+            <span>${escapeHtml(scan.scannedAt)}</span>
+          </div>`).join("")
+      : '<span class="muted">Aucun scan</span>';
 
-            const visitedCompanies = participant.reportScans.length
-                ? participant.reportScans
-                    .map((scan) => scan.company)
-                    .filter(Boolean)
-                    .filter((company, index, companies) => {
-                        return companies.indexOf(company) === index;
-                    })
-                    .map((company) => {
-                        return `
-                            <span class="tag">
-                                ${escapeHtml(company)}
-                            </span>
-                        `;
-                    })
-                    .join("")
-                : '<span class="muted">Aucune</span>';
+    return `
+      <tr>
+        <td>${escapeHtml(row.name)}</td>
+        <td>${escapeHtml(row.email)}</td>
+        <td>${escapeHtml(row.participantCompany)}</td>
+        <td>${escapeHtml(row.registrationDate)}</td>
+        <td>${scanDetails}</td>
+        <td>${row.scanCount}</td>
+        <td>${row.eligible ? "Oui" : "Non"}</td>
+      </tr>`;
+  }).join("");
 
-            return `
-                <tr>
-                    <td>${escapeHtml(participant.reportName)}</td>
-
-                    <td>${escapeHtml(participant.reportEmail)}</td>
-
-                    <td>
-                        ${escapeHtml(participant.reportCompany)}
-                    </td>
-
-                    <td>
-                        ${escapeHtml(
-                            participant.reportRegistrationDate
-                        )}
-                    </td>
-
-                    <td>${qrCodes}</td>
-
-                    <td>${visitedCompanies}</td>
-
-                    <td>${participant.reportScans.length}</td>
-                </tr>
-            `;
-        })
-        .join("");
-
-    const totalScans = filteredParticipants.reduce(
-        (total, participant) => {
-            return total + participant.reportScans.length;
-        },
-        0
-    );
-
-    const uniqueCompanies = new Set(
-        filteredParticipants.flatMap((participant) => {
-            return participant.reportScans
-                .map((scan) => scan.company)
-                .filter(Boolean);
-        })
-    );
-
-    participantCountElement.textContent =
-        filteredParticipants.length;
-
-    scanCountElement.textContent = totalScans;
-
-    companyCountElement.textContent = uniqueCompanies.size;
+  participantCount.textContent = rows.length;
+  scanCount.textContent = rows.reduce((total, row) => total + row.scanCount, 0);
+  companyCount.textContent = new Set(
+    rows.flatMap(row => row.scans.map(scan => scan.company)).filter(Boolean)
+  ).size;
 }
 
-function createCsvCell(value) {
-    return `"${String(value ?? "").replaceAll('"', '""')}"`;
+function csvCell(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+function downloadFile(fileName, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 function exportCsv() {
-    const filteredParticipants = getFilteredParticipants();
+  const header = ["Participant", "E-mail", "Société participant", "Date inscription", "QR", "Stand", "Société visitée", "Date du scan", "Éligible"];
+  const lines = [header];
 
-    const rows = [
-        [
-            "Participant",
-            "E-mail",
-            "Société du participant",
-            "Date d'inscription",
-            "QR scannés",
-            "Sociétés visitées",
-            "Total"
-        ],
-        ...filteredParticipants.map((participant) => [
-            participant.reportName,
-            participant.reportEmail,
-            participant.reportCompany,
-            participant.reportRegistrationDate,
+  getFilteredRows().forEach(row => {
+    if (!row.scans.length) {
+      lines.push([row.name, row.email, row.participantCompany, row.registrationDate, "", "", "", "", row.eligible ? "Oui" : "Non"]);
+      return;
+    }
 
-            participant.reportScans
-                .map((scan) => scan.code)
-                .join(" | "),
+    row.scans.forEach(scan => lines.push([
+      row.name, row.email, row.participantCompany, row.registrationDate,
+      scan.standId, scan.standName, scan.company, scan.scannedAt,
+      row.eligible ? "Oui" : "Non"
+    ]));
+  });
 
-            participant.reportScans
-                .map((scan) => scan.company)
-                .filter(Boolean)
-                .join(" | "),
-
-            participant.reportScans.length
-        ])
-    ];
-
-    const csvContent =
-        "\uFEFF" +
-        rows
-            .map((row) => {
-                return row.map(createCsvCell).join(";");
-            })
-            .join("\n");
-
-    downloadFile(
-        "rapport-loterie.csv",
-        csvContent,
-        "text/csv;charset=utf-8"
-    );
+  downloadFile(
+    "rapport-loterie.csv",
+    "\ufeff" + lines.map(line => line.map(csvCell).join(";")).join("\n"),
+    "text/csv;charset=utf-8"
+  );
 }
 
 function exportWord() {
-    const table = document
-        .getElementById("reportTable")
-        .outerHTML;
+  const documentHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    body{font-family:Arial,sans-serif}table{width:100%;border-collapse:collapse}th,td{border:1px solid #777;padding:7px;vertical-align:top}th{background:#ddd}.scan-detail{margin-bottom:8px}.scan-detail span{display:block}
+  </style></head><body><h1>Rapport des inscriptions et scans QR</h1><p>Généré le ${new Date().toLocaleString("fr-BE")}</p>${document.getElementById("reportTable").outerHTML}</body></html>`;
 
-    const wordContent = `
-        <!DOCTYPE html>
-        <html lang="fr">
-            <head>
-                <meta charset="UTF-8">
-                <title>
-                    Rapport des inscriptions et scans QR
-                </title>
-
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                    }
-
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                    }
-
-                    th,
-                    td {
-                        border: 1px solid #777;
-                        padding: 7px;
-                        text-align: left;
-                    }
-
-                    th {
-                        background: #dddddd;
-                    }
-
-                    .tag {
-                        display: inline-block;
-                        margin-right: 5px;
-                    }
-                </style>
-            </head>
-
-            <body>
-                <h1>
-                    Rapport des inscriptions et scans QR
-                </h1>
-
-                <p>
-                    Rapport généré le
-                    ${new Date().toLocaleString("fr-BE")}
-                </p>
-
-                ${table}
-            </body>
-        </html>
-    `;
-
-    downloadFile(
-        "rapport-loterie.doc",
-        `\uFEFF${wordContent}`,
-        "application/msword"
-    );
-}
-
-function downloadFile(fileName, content, contentType) {
-    const blob = new Blob(
-        [content],
-        { type: contentType }
-    );
-
-    const fileUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = fileUrl;
-    link.download = fileName;
-
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    URL.revokeObjectURL(fileUrl);
+  downloadFile("rapport-loterie.doc", "\ufeff" + documentHtml, "application/msword");
 }
 
 searchInput.addEventListener("input", renderReport);
 scanFilter.addEventListener("change", renderReport);
 sortSelect.addEventListener("change", renderReport);
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+document.getElementById("wordBtn").addEventListener("click", exportWord);
+document.getElementById("csvBtn").addEventListener("click", exportCsv);
+document.getElementById("refreshBtn").addEventListener("click", loadReport);
 
-printButton.addEventListener("click", () => {
-    window.print();
-});
-
-wordButton.addEventListener("click", exportWord);
-csvButton.addEventListener("click", exportCsv);
-refreshButton.addEventListener("click", loadParticipants);
-
-onAuthStateChanged(auth, (user) => {
-    if (!user) {
-        statusElement.textContent =
-            "Connectez-vous pour consulter le rapport.";
-
-        reportBody.innerHTML = "";
-
-        window.location.href = "login.html";
-        return;
-    }
-
-    loadParticipants();
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+  loadReport();
 });
