@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapport des inscriptions et scans QR</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .report-page{max-width:1200px;margin:24px auto;padding:24px;background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+    .report-header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:3px solid #5c2d91;padding-bottom:18px}
+    .report-header img{width:150px;height:auto}
+    .report-actions{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+    .report-actions button,.report-actions a{border:0;border-radius:8px;padding:11px 16px;cursor:pointer;text-decoration:none;font-weight:700}
+    .primary{background:#5c2d91;color:#fff}.secondary{background:#eee;color:#222}
+    .filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin:18px 0}
+    .filters input,.filters select{padding:11px;border:1px solid #ccc;border-radius:8px}
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0}
+    .summary article{background:#f6f2fa;border-left:5px solid #5c2d91;padding:14px;border-radius:8px}
+    .summary strong{font-size:1.7rem;display:block;color:#5c2d91}
+    .table-wrap{overflow:auto} table{width:100%;border-collapse:collapse;font-size:.94rem}
+    th,td{padding:11px;border:1px solid #ddd;text-align:left;vertical-align:top} th{background:#5c2d91;color:#fff;position:sticky;top:0}
+    tbody tr:nth-child(even){background:#fafafa}.muted{color:#666}.error{color:#a00000;background:#ffecec;padding:12px;border-radius:8px}.hidden{display:none}
+    .tag{display:inline-block;background:#eee;border-radius:999px;padding:4px 8px;margin:2px;font-size:.85rem}
+    @media(max-width:760px){.filters,.summary{grid-template-columns:1fr}.report-page{margin:0;border-radius:0;padding:14px}}
+    @media print{body{background:#fff}.report-page{box-shadow:none;margin:0;max-width:none}.report-actions,.filters,.back-link{display:none!important}th{position:static;background:#ddd!important;color:#000!important}.summary article{break-inside:avoid}tr{break-inside:avoid}.report-header{border-color:#000}}
+  </style>
+</head>
+<body>
+  <main class="report-page">
+    <header class="report-header">
+      <div>
+        <p class="back-link"><a href="admin.html">← Retour à l'administration</a></p>
+        <h1>Rapport des inscriptions et scans QR</h1>
+        <p class="muted">Liste des participants, des QR codes scannés et des sociétés visitées.</p>
+      </div>
+      <img src="logo-proximus.png" alt="Proximus">
+    </header>
+
+    <section class="report-actions">
+      <button class="primary" id="printBtn">Imprimer / Enregistrer en PDF</button>
+      <button class="secondary" id="wordBtn">Télécharger en document Word</button>
+      <button class="secondary" id="csvBtn">Télécharger en CSV</button>
+      <button class="secondary" id="refreshBtn">Actualiser</button>
+    </section>
+
+    <section class="filters">
+      <input id="searchInput" type="search" placeholder="Rechercher un participant, e-mail ou société">
+      <select id="scanFilter"><option value="all">Tous</option><option value="with">Avec scan</option><option value="without">Sans scan</option></select>
+      <select id="sortSelect"><option value="name">Trier par nom</option><option value="scans">Trier par nombre de scans</option><option value="date">Trier par inscription</option></select>
+    </section>
+
+    <section class="summary">
+      <article><strong id="participantCount">0</strong>participants inscrits</article>
+      <article><strong id="scanCount">0</strong>scans enregistrés</article>
+      <article><strong id="companyCount">0</strong>sociétés visitées</article>
+    </section>
+
+    <p id="status">Chargement du rapport…</p>
+    <p id="errorBox" class="error hidden"></p>
+
+    <div class="table-wrap" id="documentArea">
+      <table id="reportTable">
+        <thead><tr><th>Participant</th><th>E-mail</th><th>Société du participant</th><th>Date d'inscription</th><th>QR scannés</th><th>Sociétés visitées</th><th>Total</th></tr></thead>
+        <tbody id="reportBody"></tbody>
+      </table>
+    </div>
+  </main>
+  <script type="module" src="report.js"></script>
+</body>
+</html>
